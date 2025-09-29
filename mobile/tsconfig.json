@@ -1,0 +1,22 @@
+{
+  "extends": "@tsconfig/react-native/tsconfig.json",
+  "compilerOptions": {
+    "types": ["jest", "react-native", "react-native/local-cli"],
+    "baseUrl": "./src",
+    "paths": {
+      "@api/*": ["api/*"],
+      "@components/*": ["components/*"],
+      "@hooks/*": ["hooks/*"],
+      "@navigation/*": ["navigation/*"],
+      "@store/*": ["store/*"],
+      "@utils/*": ["utils/*"],
+      "@features/*": ["features/*"],
+      "@services/*": ["services/*"],
+      "@db/*": ["db/*"],
+      "@screens/*": ["screens/*"],
+      "@theme/*": ["theme/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "android", "ios"]
+}

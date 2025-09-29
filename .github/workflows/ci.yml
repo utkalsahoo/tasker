@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: tasker
+          POSTGRES_USER: tasker
+          POSTGRES_PASSWORD: tasker
+        options: >-
+          --health-cmd "pg_isready -U tasker" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Build & test backend
+        working-directory: backend
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/tasker
+          SPRING_DATASOURCE_USERNAME: tasker
+          SPRING_DATASOURCE_PASSWORD: tasker
+        run: ./mvnw clean verify -Pci
+
+  mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        working-directory: mobile
+        run: yarn install --frozen-lockfile
+      - name: Lint
+        working-directory: mobile
+        run: yarn lint
+      - name: Test
+        working-directory: mobile
+        run: yarn test --ci
+
+  detox:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        working-directory: mobile
+        run: |
+          yarn install --frozen-lockfile
+          brew tap wix/brew
+          brew install applesimutils
+      - name: Build Detox
+        working-directory: mobile
+        run: yarn detox build -c ios.sim.release
+      - name: Run Detox
+        working-directory: mobile
+        run: yarn detox test -c ios.sim.release --headless
